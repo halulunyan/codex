@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi
+  labels:
+    app.kubernetes.io/name: fastapi
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: fastapi
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+      name: http

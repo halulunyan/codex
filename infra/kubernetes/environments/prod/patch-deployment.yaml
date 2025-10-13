@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: fastapi
+          image: ghcr.io/example/fastapi:prod
+          env:
+            - name: ENVIRONMENT
+              value: prod
+            - name: LOG_LEVEL
+              value: warning

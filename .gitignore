@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+.venv/
+.poetry/
+.pytest_cache/
+.ruff_cache/
+
+# Terraform
+.terraform/
+*.tfstate*
+*.lock.hcl
+
+# Kubernetes
+*.log
+
+# Node / Misc
+node_modules/
+.DS_Store

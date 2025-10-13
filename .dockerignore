@@ -1,0 +1,10 @@
+__pycache__
+.venv
+*.pyc
+.pytest_cache
+node_modules
+infra/terraform/.terraform
+infra/terraform/environments/**/.terraform
+infra/terraform/**/.terraform.lock.hcl
+infra/terraform/**/terraform.tfstate*
+.DS_Store
