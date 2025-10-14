@@ -4,7 +4,7 @@ terraform {
 
 resource "null_resource" "data_placeholder" {
   triggers = {
-    environment = var.environment
+    environment  = var.environment
     storage_tier = var.storage_tier
   }
 }

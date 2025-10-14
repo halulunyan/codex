@@ -15,13 +15,13 @@ module "data" {
 }
 
 module "services" {
-  source            = "../../modules/services"
-  environment       = var.environment
-  service_name      = var.service_name
-  image_repository  = var.image_repository
-  image_tag         = var.image_tag
-  replicas          = var.replicas
-  depends_on        = [module.networking, module.data]
+  source           = "../../modules/services"
+  environment      = var.environment
+  service_name     = var.service_name
+  image_repository = var.image_repository
+  image_tag        = var.image_tag
+  replicas         = var.replicas
+  depends_on       = [module.networking, module.data]
 }
 
 output "service_summary" {

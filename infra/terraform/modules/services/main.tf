@@ -8,9 +8,9 @@ locals {
 
 resource "null_resource" "service_placeholder" {
   triggers = {
-    environment = var.environment
+    environment   = var.environment
     replica_count = tostring(var.replicas)
-    image = local.image
+    image         = local.image
   }
 }
 
