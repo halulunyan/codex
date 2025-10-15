@@ -1,32 +1,39 @@
-﻿Python Lint & Test:
-  runs-on: ubuntu-latest
-  defaults:
-    run:
-      working-directory: api
+﻿jobs:
+  python:
+    name: Python Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
 
-  steps:
-    - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'   # cache は付けない
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: poetry
-        cache-dependency-path: api/poetry.lock
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
 
-    # これを追加（poetry を使う前）
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 2.2.1
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-        installer-parallel: true
+      - name: Cache venv
+        uses: actions/cache@v4
+        with:
+          path: api/.venv
+          key: ${{ runner.os }}-py311-poetry-${{ hashFiles('api/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-py311-poetry-
 
-    - name: Install deps
-      run: poetry install --no-interaction --no-ansi
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi
 
-    - name: Lint
-      run: poetry run ruff check .
+      - name: Lint
+        run: poetry run ruff check .
 
-    - name: Test
-      run: poetry run pytest -q
+      - name: Test
+        run: poetry run pytest -q
