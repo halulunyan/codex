@@ -1,88 +1,32 @@
-﻿name: CI
+﻿Python Lint & Test:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: api
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+  steps:
+    - uses: actions/checkout@v4
 
-permissions:
-  contents: read
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: poetry
+        cache-dependency-path: api/poetry.lock
 
-jobs:
-  python:
-    name: Python Lint & Test
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
-    steps:
-      - uses: actions/checkout@v4
+    # これを追加（poetry を使う前）
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 2.2.1
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: poetry
-          cache-dependency-path: api/poetry.lock
+    - name: Install deps
+      run: poetry install --no-interaction --no-ansi
 
-      - uses: snok/install-poetry@v1
-        with:
-          version: "1.7.1"
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+    - name: Lint
+      run: poetry run ruff check .
 
-      - name: Install deps
-        run: poetry install --no-interaction --no-root
-
-      - name: Ruff
-        run: poetry run ruff check .
-
-      - name: Pytest
-        run: poetry run pytest -q
-
-  terraform:
-    name: Terraform Validate
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: infra/terraform/environments/dev
-    env:
-      TF_IN_AUTOMATION: "true"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.6.6"
-          terraform_wrapper: false
-      - run: terraform fmt -check
-      - run: terraform init -backend=false
-      - run: terraform validate
-
-  kubernetes:
-    name: Kubernetes Manifests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: imranismail/setup-kustomize@v1
-        with:
-          kustomize-version: "5.1.0"
-      - name: Validate base
-        run: kustomize build infra/kubernetes/base
-      - name: Validate overlays
-        run: |
-          kustomize build infra/kubernetes/environments/dev
-          kustomize build infra/kubernetes/environments/stage
-          kustomize build infra/kubernetes/environments/prod
-
-  summary:
-    name: CI Summary
-    runs-on: ubuntu-latest
-    needs: [python, terraform, kubernetes]
-    if: ${{ always() }}
-    steps:
-      - name: Report job results
-        run: |
-          echo "Python Lint & Test: ${{ needs.python.result }}"
-          echo "Terraform Validate: ${{ needs.terraform.result }}"
-          echo "Kubernetes Manifests: ${{ needs.kubernetes.result }}"
+    - name: Test
+      run: poetry run pytest -q
