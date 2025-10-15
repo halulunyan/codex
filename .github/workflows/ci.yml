@@ -1,44 +1,57 @@
-﻿jobs:
+﻿name: Python Lint & Test
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "api/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "api/**"
+      - ".github/workflows/ci.yml"
+  workflow_dispatch:
+
+jobs:
   python:
     name: Python Lint & Test
     runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: api
+
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Pythonだけセットアップ（cache指定はしない）
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      # 2) Poetry を先にインストール
-      - uses: snok/install-poetry@v1
+      # Poetry を先に入れる
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
         with:
+          version: "1.8.3"
           virtualenvs-create: true
           virtualenvs-in-project: true
-          installer-parallel: true
 
-      # 3) Poetry のキャッシュ（lockfile に合わせてキー生成）
-      - uses: actions/cache@v4
+      # Poetry / pip キャッシュ + プロジェクト .venv をロックファイルでキー化
+      - name: Cache deps
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pypoetry
-            .venv
+            ~/.cache/pip
+            api/.venv
           key: ${{ runner.os }}-poetry-${{ hashFiles('api/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
+          restore-keys: ${{ runner.os }}-poetry-
 
-      # 以降は自由に
-      - name: Show versions
-        run: |
-          python --version
-          poetry --version
-
-      - name: Install deps
-        working-directory: api
+      - name: Install dependencies
         run: poetry install --no-interaction --no-root
 
-      - name: Lint & Test
-        working-directory: api
-        run: |
-          poetry run ruff check .
-          poetry run pytest -q
+      - name: Lint
+        run: poetry run ruff check .
+
+      - name: Test
+        run: poetry run pytest -q
