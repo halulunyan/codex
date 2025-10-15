@@ -1,37 +1,44 @@
-﻿# 1) Pythonは入れるけど cache は使わない
-- uses: actions/setup-python@v5
-  with:
-    python-version: '3.11'
-    # cache: poetry   ← これを削除
+﻿jobs:
+  python:
+    name: Python Lint & Test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
 
-# 2) Poetry を先に入れる
-- uses: snok/install-poetry@v1
-  with:
-    version: 1.8.3
-    virtualenvs-create: true
-    virtualenvs-in-project: true
-    installer-parallel: true
+      # 1) Pythonだけセットアップ（cache指定はしない）
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-# 3) （任意だが推奨）Poetry/venv を actions/cache でキャッシュ
-- name: Cache Poetry & venv
-  uses: actions/cache@v4
-  with:
-    path: |
-      ~/.cache/pypoetry
-      api/.venv
-    key: ${{ runner.os }}-poetry-${{ hashFiles('api/poetry.lock') }}
-    restore-keys: |
-      ${{ runner.os }}-poetry-
+      # 2) Poetry を先にインストール
+      - uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
 
-# 4) 以降のコマンドは api ディレクトリで
-- name: Install deps
-  working-directory: api
-  run: poetry install --no-interaction --no-root
+      # 3) Poetry のキャッシュ（lockfile に合わせてキー生成）
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            .venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('api/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
 
-- name: Lint
-  working-directory: api
-  run: poetry run ruff check .
+      # 以降は自由に
+      - name: Show versions
+        run: |
+          python --version
+          poetry --version
 
-- name: Test
-  working-directory: api
-  run: poetry run pytest -q
+      - name: Install deps
+        working-directory: api
+        run: poetry install --no-interaction --no-root
+
+      - name: Lint & Test
+        working-directory: api
+        run: |
+          poetry run ruff check .
+          poetry run pytest -q
